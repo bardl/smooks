@@ -43,7 +43,6 @@ import org.milyn.ect.formats.unedifact.UnEdifactSpecificationReader;
 import org.milyn.edisax.EDIConfigurationException;
 import org.milyn.edisax.EDIParser;
 import org.milyn.edisax.model.internal.Edimap;
-import org.milyn.edisax.unedifact.UNEdifactNamespaceResolver;
 import org.milyn.edisax.unedifact.handlers.r41.UNEdifact41ControlBlockHandlerFactory;
 import org.milyn.io.StreamUtils;
 import org.milyn.util.ClassUtil;
@@ -59,29 +58,34 @@ import org.xml.sax.helpers.DefaultHandler;
  */
 public class UnEdifactSpecificationReaderTest  {
 
-	private static UnEdifactSpecificationReader d08AReader;
+	private static UnEdifactSpecificationReader d08AReader_longnames;
+    private static UnEdifactSpecificationReader d08AReader_shortnames;
 	private XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());;
 
 	@BeforeClass
-	public static void parseD08A() throws Exception {
+	public static void parseD08ALongName() throws Exception {
         InputStream inputStream = UnEdifactSpecificationReaderTest.class.getResourceAsStream("D08A.zip");
         ZipInputStream zipInputStream = new ZipInputStream(inputStream);
-        d08AReader = new UnEdifactSpecificationReader(zipInputStream, false);
+        d08AReader_longnames = new UnEdifactSpecificationReader(zipInputStream, false, false);
+
+        inputStream = UnEdifactSpecificationReaderTest.class.getResourceAsStream("D08A.zip");
+        zipInputStream = new ZipInputStream(inputStream);
+        d08AReader_shortnames = new UnEdifactSpecificationReader(zipInputStream, false, true);
 	}
 	
     public void _disabled_test_D08A_Messages() throws InstantiationException, IllegalAccessException, IOException, EdiParseException {
-        test("BANSTA", d08AReader);
-        test("CASRES", d08AReader);
-        test("INVOIC", d08AReader);
-        test("PAYMUL", d08AReader);
-        test("TPFREP", d08AReader);
+        test("BANSTA", d08AReader_longnames);
+        test("CASRES", d08AReader_longnames);
+        test("INVOIC", d08AReader_longnames);
+        test("PAYMUL", d08AReader_longnames);
+        test("TPFREP", d08AReader_longnames);
     }
 
     @Test
     public void test_getMessages() throws InstantiationException, IllegalAccessException, IOException {
-        Set<String> messages = d08AReader.getMessageNames();
+        Set<String> messages = d08AReader_longnames.getMessageNames();
         for(String message : messages) {
-            Edimap model = d08AReader.getMappingModel(message);
+            Edimap model = d08AReader_longnames.getMappingModel(message);
             StringWriter writer = new StringWriter();
             model.write(writer);
         }
@@ -90,36 +94,64 @@ public class UnEdifactSpecificationReaderTest  {
     @Test
     public void test_D08A_Segments() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
 
-        Edimap edimap = d08AReader.getDefinitionModel();
+        Edimap edimap = d08AReader_longnames.getDefinitionModel();
 
         StringWriter stringWriter = new StringWriter();
         edimap.write(stringWriter);
 
         Document document = new SAXBuilder().build(new StringReader(stringWriter.toString()));
         
-        testSegment("BGM", document);
-        testSegment("DTM", document);
-        testSegment("NAD", document);
-        testSegment("PRI", document);        
+        testSegment("BGM", document, false);
+        testSegment("DTM", document, false);
+        testSegment("NAD", document, false);
+        testSegment("PRI", document, false);
+    }
+
+    @Test
+    public void test_D08A_Segments_shortname() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
+
+        Edimap edimap = d08AReader_shortnames.getDefinitionModel();
+
+        StringWriter stringWriter = new StringWriter();
+        edimap.write(stringWriter);
+
+        Document document = new SAXBuilder().build(new StringReader(stringWriter.toString()));
+
+        testSegment("BGM", document, true);
+        testSegment("DTM", document, true);
+        testSegment("NAD", document, true);
+        testSegment("PRI", document, true);
     }
 
     @Test
     public void testRealLifeInputFilesD08A() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
         //Test INVOIC
-        String mappingModel = getEdiMessageAsString(d08AReader, "INVOIC");
+        String mappingModel = getEdiMessageAsString(d08AReader_longnames, "INVOIC");
         testPackage("d96a-invoic-1", mappingModel);
     }
 
     @Test
-    public void testRealLifeInputFilesD93A() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
+    public void testRealLifeInputFilesD93ALongName() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
         InputStream inputStream = ClassUtil.getResourceAsStream("d93a.zip", this.getClass());
         ZipInputStream zipInputStream = new ZipInputStream(inputStream);
 
-        EdiSpecificationReader ediSpecificationReader = new UnEdifactSpecificationReader(zipInputStream, false);
+        EdiSpecificationReader ediSpecificationReader = new UnEdifactSpecificationReader(zipInputStream, false, false);
 
         //Test INVOIC
         String mappingModel = getEdiMessageAsString(ediSpecificationReader, "INVOIC");
         testPackage("d93a-invoic-1", mappingModel);
+    }
+
+    @Test
+    public void testRealLifeInputFilesD93AShortName() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
+        InputStream inputStream = ClassUtil.getResourceAsStream("d93a.zip", this.getClass());
+        ZipInputStream zipInputStream = new ZipInputStream(inputStream);
+
+        EdiSpecificationReader ediSpecificationReader = new UnEdifactSpecificationReader(zipInputStream, false, true);
+
+        //Test INVOIC
+        String mappingModel = getEdiMessageAsString(ediSpecificationReader, "INVOIC");
+        testPackage("d93a-invoic-shortname", mappingModel);
     }
 
     public void testPackage(String packageName, String mappingModel) throws IOException, InstantiationException, IllegalAccessException, SAXException, EDIConfigurationException {
@@ -151,8 +183,8 @@ public class UnEdifactSpecificationReaderTest  {
         return sw.toString();
     }
 
-	private void testSegment(final String segmentCode, Document doc) throws IOException, SAXException, JDOMException {
-        String expected = new String(StreamUtils.readStream(getClass().getResourceAsStream("d08a/segment/expected-" + segmentCode.toLowerCase() + ".xml"))).trim();
+	private void testSegment(final String segmentCode, Document doc, boolean useShortName) throws IOException, SAXException, JDOMException {
+        String expected = new String(StreamUtils.readStream(getClass().getResourceAsStream("d08a/segment/expected-" + (useShortName ? "shortname-" : "") + segmentCode.toLowerCase() + ".xml"))).trim();
         XPath lookup = XPath.newInstance("//medi:segment[@segcode='" + segmentCode + "']");
         lookup.addNamespace("medi", "http://www.milyn.org/schema/edi-message-mapping-1.5.xsd");
         Element node = (Element) lookup.selectSingleNode(doc);
