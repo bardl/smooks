@@ -82,7 +82,7 @@ public class UnEdifactSpecificationReaderTest  {
     }
 
     @Test
-    public void test_getMessages() throws InstantiationException, IllegalAccessException, IOException {
+    public void test_getMessagesLongName() throws InstantiationException, IllegalAccessException, IOException {
         Set<String> messages = d08AReader_longnames.getMessageNames();
         for(String message : messages) {
             Edimap model = d08AReader_longnames.getMappingModel(message);
@@ -92,7 +92,17 @@ public class UnEdifactSpecificationReaderTest  {
     }
 
     @Test
-    public void test_D08A_Segments() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
+    public void test_getMessagesShortName() throws InstantiationException, IllegalAccessException, IOException {
+        Set<String> messages = d08AReader_shortnames.getMessageNames();
+        for(String message : messages) {
+            Edimap model = d08AReader_shortnames.getMappingModel(message);
+            StringWriter writer = new StringWriter();
+            model.write(writer);
+        }
+    }
+
+    @Test
+    public void test_D08A_SegmentsLongName() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
 
         Edimap edimap = d08AReader_longnames.getDefinitionModel();
 
@@ -108,7 +118,7 @@ public class UnEdifactSpecificationReaderTest  {
     }
 
     @Test
-    public void test_D08A_Segments_shortname() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
+    public void test_D08A_Segments_ShortName() throws InstantiationException, IllegalAccessException, IOException, EdiParseException, ParserConfigurationException, SAXException, JDOMException {
 
         Edimap edimap = d08AReader_shortnames.getDefinitionModel();
 
@@ -124,10 +134,17 @@ public class UnEdifactSpecificationReaderTest  {
     }
 
     @Test
-    public void testRealLifeInputFilesD08A() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
+    public void testRealLifeInputFilesD08ALongName() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
         //Test INVOIC
         String mappingModel = getEdiMessageAsString(d08AReader_longnames, "INVOIC");
         testPackage("d96a-invoic-1", mappingModel);
+    }
+
+    @Test
+    public void testRealLifeInputFilesD08AShortName() throws IOException, InstantiationException, IllegalAccessException, EDIConfigurationException, SAXException {
+        //Test INVOIC
+        String mappingModel = getEdiMessageAsString(d08AReader_shortnames, "INVOIC");
+        testPackage("d96a-invoic-shortname", mappingModel);
     }
 
     @Test

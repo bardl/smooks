@@ -318,7 +318,6 @@ public class ClassModelCompiler {
         if(child == null) {
             String packageName = parentBinding.getBeanClass().getPackageName();
             String className = EJCUtils.encodeClassName(mappingNode.getJavaName());
-            String postfix = mappingNode.getNodeTypeRef();
 
             if(mappingNode instanceof Field) {
                 packageName += ".field";
@@ -326,14 +325,6 @@ public class ClassModelCompiler {
                 packageName += ".component";
             } else if(mappingNode instanceof SubComponent) {
                 packageName += ".subcomponent";
-            }
-
-            if(postfix != null) {
-                int colonIdx = postfix.indexOf(":");
-                if(colonIdx != -1) {
-                    postfix = postfix.substring(colonIdx + 1);
-                }
-                className += postfix;
             }
 
             child = new JClass(packageName, className, getCurrentClassId()).setSerializable();

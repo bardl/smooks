@@ -36,7 +36,7 @@ public class ECTUnEdifactExecutor {
     private boolean useShortName = true;
 
     public void execute() throws EdiParseException {
-        assertConfigOK();
+        assertConfigOK();                       
 
         ZipInputStream definitionZipStream;
         try {

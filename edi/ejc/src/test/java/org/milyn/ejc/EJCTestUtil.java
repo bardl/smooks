@@ -101,14 +101,25 @@ public class EJCTestUtil {
         if(callerClass == null) {
             TestCase.fail("Failed to resolve caller class.");
         }
+        InputStream mappingModel = callerClass.getResourceAsStream(ediMappingModelFile);
+        testModel(ediMessageFile, mappingModel, factoryClassName, dump, callerClass);
+
+    }
+
+    public static void testModel(String ediMessageFile, InputStream mappingModelStream, String factoryClassName, boolean dump, Class callerClass) throws IOException, SAXException, IllegalNameException {
 
         Archive archive = null;
         try {
-            archive = buildModelArchive(callerClass.getResourceAsStream(ediMappingModelFile), ORG_SMOOKS_EJC_TEST);
+            archive = buildModelArchive(mappingModelStream, ORG_SMOOKS_EJC_TEST);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
             TestCase.fail("Exception building model archive: " + e.getMessage());
         }
+
+        testModel(archive, ediMessageFile, factoryClassName, dump, callerClass);
+    }
+
+    public static void testModel(Archive archive, String ediMessageFile, String factoryClassName, boolean dump, Class callerClass) throws IOException {
 
         ArchiveClassLoader classLoader = new ArchiveClassLoader(archive);
         Thread.currentThread().setContextClassLoader(classLoader);
