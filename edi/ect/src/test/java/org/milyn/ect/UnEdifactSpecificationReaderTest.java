@@ -63,7 +63,7 @@ public class UnEdifactSpecificationReaderTest  {
 	private XMLOutputter out = new XMLOutputter(Format.getPrettyFormat());;
 
 	@BeforeClass
-	public static void parseD08ALongName() throws Exception {
+	public static void parseD08A() throws Exception {
         InputStream inputStream = UnEdifactSpecificationReaderTest.class.getResourceAsStream("D08A.zip");
         ZipInputStream zipInputStream = new ZipInputStream(inputStream);
         d08AReader_longnames = new UnEdifactSpecificationReader(zipInputStream, false, false);
